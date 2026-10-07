@@ -1,0 +1,84 @@
+{
+  "name": "S02 Razuznavane - TravelNow (Firma 15)",
+  "versions": {
+    "attack": "16",
+    "navigator": "5.1.0",
+    "layer": "4.5"
+  },
+  "domain": "enterprise-attack",
+  "description": "Techniki izpolzvani po vreme na razuznavaneto na laboratoriyata (S02). Firma 15 - TravelNow Platform AD.",
+  "filters": {
+    "platforms": ["Linux", "Windows", "Network"]
+  },
+  "sorting": 0,
+  "layout": {
+    "layout": "side",
+    "aggregateFunction": "average",
+    "showID": true,
+    "showName": true
+  },
+  "hideDisabled": false,
+  "techniques": [
+    {
+      "techniqueID": "T1595",
+      "tactic": "reconnaissance",
+      "score": 100,
+      "comment": "Active Scanning - nmap -p 80,8080 -sV sreshtu srv (10.140.0.10)",
+      "enabled": true,
+      "showSubtechniques": true
+    },
+    {
+      "techniqueID": "T1595.001",
+      "tactic": "reconnaissance",
+      "score": 100,
+      "comment": "Scanning IP Blocks - nmap -sn 10.140.0.0/24 (host discovery)",
+      "enabled": true
+    },
+    {
+      "techniqueID": "T1595.002",
+      "tactic": "reconnaissance",
+      "score": 100,
+      "comment": "Vulnerability Scanning / service version detection - nmap -sV",
+      "enabled": true
+    },
+    {
+      "techniqueID": "T1590",
+      "tactic": "reconnaissance",
+      "score": 60,
+      "comment": "Gather Victim Network Information - otkrivane na hostove v LAN1",
+      "enabled": true
+    },
+    {
+      "techniqueID": "T1592",
+      "tactic": "reconnaissance",
+      "score": 100,
+      "comment": "Gather Victim Host Information - versii na uslugite (nginx, Python 3.13.5)",
+      "enabled": true
+    },
+    {
+      "techniqueID": "T1046",
+      "tactic": "discovery",
+      "score": 100,
+      "comment": "Network Service Discovery - otkrivane na otvoreni portove i uslugi (80, 8080)",
+      "enabled": true
+    }
+  ],
+  "gradient": {
+    "colors": ["#8ec843ff", "#ffe766ff", "#ff6666ff"],
+    "minValue": 0,
+    "maxValue": 100
+  },
+  "legendItems": [
+    {
+      "label": "Izpolzvana tehnika (S02)",
+      "color": "#ff6666ff"
+    }
+  ],
+  "metadata": [],
+  "links": [],
+  "showTacticRowBackground": true,
+  "tacticRowBackground": "#dddddd",
+  "selectTechniquesAcrossTactics": true,
+  "selectSubtechniquesWithParent": false,
+  "selectVisibleTechniques": false
+}
