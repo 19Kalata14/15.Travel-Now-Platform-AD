@@ -1,0 +1,73 @@
+#!/usr/sbin/nft -f
+# МИС, Час 9. Защитна стена на gw за TRAVELNOW (№15 TravelNow Platform AD)
+# Генерирано от postroi-segmenti.sh skelet на 2026-11-25. Попълнено по матрицата matrica-potoci.csv.
+# Ред на работа: матрица на потоците -> правило с коментар "изискване N" -> proba разрешено и забранено -> zhurnal.
+# Прилагане: ./postroi-segmenti.sh probvai moi.nft   (връща старото след 60 s без потвърждение)
+#
+# Сегменти: hq = централа (Tech, Payment GW 10.140.0.10, Booking API 10.140.0.20)
+#           montana = контактен център, kyustend = B2B партньори, inet = интернет.
+# Каквото не е разрешено изрично, се отказва (policy drop) и се записва в журнала.
+# Изискване 4 (Payment само от Tech) и частта от изискване 3 за HTTPS и /api/b2b
+# не минават през gw или са на ниво 7: виж раздел 5 на test-matrica.md.
+
+flush ruleset
+
+define MGMT = "enp0s3"      # интерфейсът, през който управляваш gw (ssh от лаптопа)
+define IF_HQ         = "v-hq"
+define IF_MONTANA    = "v-montana"
+define IF_KYUSTEND   = "v-kyustend"
+define IF_INET       = "v-inet"
+define NET_HQ        = 10.140.0.0/24
+define NET_MONTANA   = 10.141.0.0/24
+define NET_KYUSTEND  = 10.142.0.0/24
+define NET_INET      = 203.0.113.0/24
+
+define PAYMENT_GW  = 10.140.0.10    # Payment GW, PCI зона (CDE)
+define BOOKING_API = 10.140.0.20    # Booking API, в нея и B2B API (/api/b2b)
+
+table inet firma {
+    chain input {
+        # трафик КЪМ самия gw
+        type filter hook input priority filter; policy drop;
+        ct state established,related accept comment "отговори на връзки, които gw е започнал"
+        ct state invalid drop comment "пакети извън валидна връзка"
+        iifname "lo" accept comment "локален трафик на gw"
+        iifname $MGMT tcp dport 22 accept comment "управление на gw"
+        # сценарият няма услуги на самия gw: сегментите не стигат до gw
+        counter log prefix "[TRAVELNOW-IN-DROP] " comment "всичко останало към gw: отказ и запис"
+    }
+
+    chain forward {
+        # трафик ПРЕЗ gw, между сегментите: тук е сегментацията
+        type filter hook forward priority filter; policy drop;
+        ct state established,related accept comment "отговорите на вече разрешени връзки"
+        ct state invalid drop comment "пакети извън валидна връзка"
+
+        # изискване 5: PCI зоната е изолирана. През gw Payment GW не говори с никого.
+        ip saddr $PAYMENT_GW counter log prefix "[TRAVELNOW-PCI-DROP] " drop comment "изискване 5: Payment GW не започва връзки към други сегменти"
+        ip daddr $PAYMENT_GW counter log prefix "[TRAVELNOW-PCI-DROP] " drop comment "изискване 2, 4, 5: към Payment GW само от Tech (10.140.0.0/24), а Tech не минава през gw"
+
+        # изискване 1: контактният център (Монтана) към Booking API
+        iifname $IF_MONTANA ip saddr $NET_MONTANA ip daddr $BOOKING_API tcp dport 8080 accept comment "изискване 1: контактен център към Booking API 8080"
+
+        # изискване 3: партньорите (Кюстендил) към B2B API, само от 10.142.0.0/24
+        iifname $IF_KYUSTEND ip saddr $NET_KYUSTEND ip daddr $BOOKING_API tcp dport 8080 accept comment "изискване 3: партньори към B2B API, само от 10.142.0.0/24 (HTTPS и /api/b2b: раздел 5)"
+
+        counter log prefix "[TRAVELNOW-DROP] " comment "всичко останало между сегментите: отказ и запис"
+    }
+
+    chain output {
+        type filter hook output priority filter; policy accept;
+    }
+}
+
+table ip nat {
+    chain prerouting {
+        type nat hook prerouting priority dstnat; policy accept;
+        # сценарият не публикува услуга към интернет: няма DNAT
+    }
+    chain postrouting {
+        type nat hook postrouting priority srcnat; policy accept;
+        # сценарият не дава интернет на нито един сегмент: няма masquerade към $IF_INET
+    }
+}
