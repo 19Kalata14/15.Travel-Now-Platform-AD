@@ -1,0 +1,1 @@
+[31m[1mInvalid password: minimum length 15. [invalidPasswordMinLengthMessage][21m[39m[0m
