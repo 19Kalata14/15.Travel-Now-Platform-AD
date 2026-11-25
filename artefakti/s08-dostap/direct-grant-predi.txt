@@ -1,0 +1,8 @@
+ИЗДАДЕН ТОКЕН (първите 40 знака): eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwi...
+  iss                  http://127.0.0.1:8080/realms/travelnow
+  azp                  h08-test
+  preferred_username   dimitar.admin
+  realm_access         {'roles': ['default-roles-travelnow', 'offline_access', 'uma_authorization', 'admins']}
+  iat                  1795625201
+  exp                  1795625501
+  валиден (секунди)     300
