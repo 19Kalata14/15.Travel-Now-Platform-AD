@@ -1,0 +1,1 @@
+ОТКАЗ 400 {"error":"unauthorized_client","error_description":"Client not allowed for direct access grants"}
