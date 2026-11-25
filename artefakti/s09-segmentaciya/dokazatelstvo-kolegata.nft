@@ -1,0 +1,15 @@
+#!/usr/sbin/nft -f
+# Час 9, „Провери доказателството“: ruleset на "колегата" (TechRetail). Изглежда правилен. Не е.
+flush ruleset
+
+table inet firma {
+    chain input {
+        type filter hook input priority filter; policy drop;
+        ct state established,related accept
+        iifname "lo" accept
+        tcp dport 22 accept comment "управление на gw"
+        iifname { "v-plovdiv", "v-varna" } tcp dport 8080 accept comment "изискване 1: клоновете към ERP"
+        iifname "v-hq" tcp dport 22 accept comment "изискване 4: SSH само от HQ"
+        counter log prefix "[TECHRETAIL-DROP] "
+    }
+}
